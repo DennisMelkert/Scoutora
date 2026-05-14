@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scoutora</title>
+
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --orange: #ff6b00;
+      --text: #ffffff;
+      --muted: #a1a1aa;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 40px;
+      background: radial-gradient(
+        circle at 50% 20%,
+        rgba(255, 107, 0, 0.25),
+        transparent 35%
+      );
+    }
+
+    h1 {
+      font-size: 64px;
+      margin: 0 0 10px;
+      font-weight: 900;
+      letter-spacing: 2px;
+    }
+
+    .orange {
+      color: var(--orange);
+    }
+
+    p {
+      font-size: 24px;
+      color: var(--muted);
+      margin-bottom: 30px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 14px;
+      background: var(--orange);
+      color: #000;
+      font-weight: 900;
+      padding: 14px 24px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <!-- Hier wordt de app ingeladen -->
+  <div id="app"></div>
+
+  <script>
+    function render() {
+      document.getElementById("app").innerHTML = `
+        <main class="hero">
+          <div>
+            <div style="font-size: 90px; font-weight: 900;">⚽</div>
+            <h1>SCOUTORA</h1>
+            <p>
+              Discover. <span class="orange">Collect.</span> Rise.
+            </p>
+            <button class="btn" onclick="alert('Scoutora werkt perfect!')">
+              Start App
+            </button>
+          </div>
+        </main>
+      `;
+    }
+
+    render();
+  </script>
+</body>
+</html>
