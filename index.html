@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scoutora Standalone</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body { margin: 0; background: #000; }
+    button, select { font-family: inherit; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useMemo, useState } = React;
+
+    const Icon = ({ children, size = 18, className = "" }) => (
+      <span className={className} style={{ fontSize: size, lineHeight: 1 }}>{children}</span>
+    );
+    const Album = (props) => <Icon {...props}>🗂️</Icon>;
+    const CoinsIcon = (props) => <Icon {...props}>🪙</Icon>;
+    const Flame = (props) => <Icon {...props}>🔥</Icon>;
+    const LayoutDashboard = (props) => <Icon {...props}>📊</Icon>;
+    const PackageIcon = (props) => <Icon {...props}>📦</Icon>;
+    const QrCode = (props) => <Icon {...props}>▦</Icon>;
+    const Repeat2 = (props) => <Icon {...props}>🔁</Icon>;
+    const Star = (props) => <Icon {...props}>⭐</Icon>;
+    const Trophy = (props) => <Icon {...props}>🏆</Icon>;
+    const Users = (props) => <Icon {...props}>👥</Icon>;
+    const Zap = (props) => <Icon {...props}>⚡</Icon>;
+
+    const rarities = {
+      Rookie: "from-zinc-700 to-zinc-900",
+      Bronze: "from-amber-800 to-zinc-950",
+      Silver: "from-zinc-300 to-zinc-800",
+      Gold: "from-yellow-300 to-orange-700",
+      Elite: "from-red-500 to-zinc-950",
+      Legendary: "from-fuchsia-500 to-zinc-950",
+      Immortal: "from-cyan-300 to-zinc-950",
+    };
+
+    const rarityThresholds = [
+      { name: "Bronze", minOvr: 0, color: "text-amber-500" },
+      { name: "Silver", minOvr: 62, color: "text-zinc-300" },
+      { name: "Gold", minOvr: 72, color: "text-yellow-400" },
+      { name: "Elite", minOvr: 76, color: "text-red-400" },
+      { name: "Legendary", minOvr: 80, color: "text-fuchsia-400" },
+      { name: "Immortal", minOvr: 88, color: "text-cyan-400" },
+    ];
+
+    const teams = [
+      "WSV Apeldoorn JO8-1", "WSV Apeldoorn JO8-2", "WSV Apeldoorn JO9-1", "WSV Apeldoorn JO9-2",
+      "WSV Apeldoorn JO10-1", "WSV Apeldoorn JO10-2", "WSV Apeldoorn JO11-1", "WSV Apeldoorn JO11-2",
+      "WSV Apeldoorn JO12-1", "WSV Apeldoorn JO12-2", "WSV Apeldoorn JO13-1", "WSV Apeldoorn JO14-1",
+      "WSV Apeldoorn JO15-1", "WSV Apeldoorn JO16-1", "WSV Apeldoorn JO17-1", "WSV Apeldoorn JO19-1", "WSV Apeldoorn 1",
+    ];
+
+    const jo11_1 = ["Benjamin ten Cate", "Noud Unterhorst", "Sabri Taibe", "Jay-Veron Cleofa", "Zayro Cleofa", "Imran Licina", "Jace Melkert", "Moussa Moudad", "Sem Sanders", "Tim Weistra", "Kaan Kemal Demirkol"];
+    const jo11_2 = ["Stefano Timo Jansen", "Logan Jay Brakke", "Bas Suppers", "Daan van Tongeren", "Finn Gaartman", "Talha Egri", "Tije Sa", "Dylairo Sanchez Pretell", "Mohmed Bushara", "Adam", "Dani Dlzar"];
+    const jo17 = [
+      [1, "Rowan Logher", "GK", 68, "Silver", "Speler"], [2, "Aslan Cadirci", "RB", 70, "Silver", "Speler"],
+      [3, "Benjamin Blom", "CB", 74, "Gold", "Speler"], [4, "Daan Jansen", "CB", 71, "Silver", "Speler"],
+      [5, "Sem Bakker", "LB", 70, "Silver", "Speler"], [6, "Milan Smit", "CDM", 72, "Gold", "Speler"],
+      [7, "Mirko Ćutunić", "RW", 75, "Gold", "Speler"], [8, "Noah van Dijk", "CM", 73, "Gold", "Speler"],
+      [9, "Jan Jaap ten Brinke", "ST", 76, "Gold", "Speler"], [10, "Kai Boelens", "CAM", 77, "Elite", "Speler"],
+      [11, "Roël Mabiala", "LW", 78, "Elite", "Speler"], [12, "Finn Visser", "GK", 69, "Silver", "Speler"],
+      [14, "Kaua Vinicius Santos Medeiros", "RW", 79, "Elite", "Speler"], [16, "Lucas Meijer", "CM", 72, "Gold", "Speler"],
+      [17, "Konstantijn Savchuk", "CM", 80, "Legendary", "Speler"],
+    ];
+
+    const first = ["Liam", "Noah", "Daan", "Milan", "Levi", "Finn", "Lucas", "Jayden", "Ties", "Sem", "Mees", "Ruben"];
+    const last = ["Jansen", "Bakker", "Smit", "Bos", "van Dijk", "Visser", "Meijer", "Prins", "Dekker", "Groen", "Kuiper", "Vos"];
+    const positions = ["GK", "RB", "CB", "LB", "CDM", "CM", "CAM", "RW", "LW", "ST"];
+
+    const packs = [
+      { id: "starter", name: "Starter Pack", price: 100, cards: 5, xp: 25, note: "Goedkoop beginpack" },
+      { id: "talent", name: "Talent Pack", price: 250, cards: 10, xp: 50, note: "Meer kans op sterke spelers" },
+      { id: "legend", name: "Legend Pack", price: 500, cards: 15, xp: 100, note: "Beste pack voor topkaarten" },
+    ];
+
+    function rarityFromOvr(ovr) {
+      if (ovr >= 88) return "Immortal";
+      if (ovr >= 80) return "Legendary";
+      if (ovr >= 76) return "Elite";
+      if (ovr >= 72) return "Gold";
+      if (ovr >= 62) return "Silver";
+      return "Bronze";
+    }
+
+    function shortTeamName(team) { return team.replace("WSV Apeldoorn ", ""); }
+
+    function makeStaffCard(id, team, type) {
+      return { id, team, number: type === "Trainer" ? 98 : 99, name: `${type} ${shortTeamName(team)}`, position: "STAFF", ovr: type === "Trainer" ? 70 : 68, rarity: "Silver", role: "Staf" };
+    }
+
+    function makeCards() {
+      let id = 1;
+      const cards = [];
+      function addStaffCards(team) { cards.push(makeStaffCard(id++, team, "Trainer")); cards.push(makeStaffCard(id++, team, "Leider")); }
+      function addNamedTeam(team, names) {
+        names.forEach((name, index) => {
+          const number = index + 1;
+          const ovr = 55 + (index % 8);
+          cards.push({ id: id++, team, number, name, position: number === 1 ? "GK" : positions[number % positions.length], ovr, rarity: rarityFromOvr(ovr), role: "Speler" });
+        });
+        addStaffCards(team);
+      }
+      teams.forEach((team, teamIndex) => {
+        if (team === "WSV Apeldoorn JO11-1") { addNamedTeam(team, jo11_1); return; }
+        if (team === "WSV Apeldoorn JO11-2") { addNamedTeam(team, jo11_2); return; }
+        if (team === "WSV Apeldoorn JO17-1") { jo17.forEach(([number, name, position, ovr, rarity, role]) => cards.push({ id: id++, team, number, name, position, ovr, rarity, role })); addStaffCards(team); return; }
+        const amount = team === "WSV Apeldoorn 1" ? 18 : team.includes("JO8") || team.includes("JO9") || team.includes("JO10") ? 8 : 12;
+        for (let number = 1; number <= amount; number += 1) {
+          const seed = id + teamIndex * 7 + number;
+          const isFirstTeam = team === "WSV Apeldoorn 1";
+          const ovr = isFirstTeam ? 78 + (number % 12) : 48 + teamIndex + (number % 9);
+          cards.push({ id: id++, team, number, name: `${first[seed % first.length]} ${last[(seed * 3) % last.length]}`, position: number === 1 ? "GK" : positions[number % positions.length], ovr, rarity: rarityFromOvr(ovr), role: "Speler" });
+        }
+        addStaffCards(team);
+      });
+      return cards;
+    }
+
+    function applyPlayerProgress(cards, progress) {
+      return cards.map((card) => card.id !== progress.cardId ? card : { ...card, ovr: Math.min(99, card.ovr + progress.upgrades), rarity: rarityFromOvr(Math.min(99, card.ovr + progress.upgrades)), xp: progress.xp, level: progress.upgrades + 1, isOwnPlayer: true });
+    }
+
+    function validateCards(cards) {
+      const errors = [];
+      teams.forEach((team) => {
+        const teamCards = cards.filter((card) => card.team === team);
+        const staffCards = teamCards.filter((card) => card.role === "Staf");
+        if (teamCards.length === 0) errors.push(`${team} heeft geen kaarten.`);
+        if (staffCards.length !== 2) errors.push(`${team} moet precies 2 stafkaarten hebben.`);
+      });
+      const ids = new Set();
+      cards.forEach((card) => { if (ids.has(card.id)) errors.push(`Dubbel kaart-id gevonden: ${card.id}`); ids.add(card.id); });
+      return errors;
+    }
+
+    function getRarityProgress(card, playerProgress) {
+      if (!card) return { nextRarity: null, xpRemainingForNextRarity: 0, rows: [] };
+      const rows = rarityThresholds.filter((rarity) => rarity.minOvr > card.ovr).map((rarity) => {
+        const upgradesNeeded = rarity.minOvr - card.ovr;
+        const totalXpNeeded = Array.from({ length: upgradesNeeded }, (_, index) => 100 + (playerProgress.upgrades + index) * 50).reduce((sum, value) => sum + value, 0);
+        return { ...rarity, upgradesNeeded, totalXpNeeded, xpRemaining: Math.max(0, totalXpNeeded - playerProgress.xp) };
+      });
+      return { nextRarity: rows[0] || null, xpRemainingForNextRarity: rows[0]?.xpRemaining || 0, rows };
+    }
+
+    function Card({ card, amount = 1, locked = false, small = false, flip = false }) {
+      const [isFlipped, setIsFlipped] = useState(false);
+      const isStaff = card.role === "Staf";
+      const sizeClass = small ? "h-40" : "h-64";
+      const paddingClass = small ? "p-2" : "p-3";
+      const ovrClass = small ? "text-lg" : "text-3xl";
+      const ballClass = small ? "my-2 h-10 text-2xl" : "my-4 h-16 text-4xl";
+      const nameClass = small ? "text-[10px]" : "text-sm";
+      const positionClass = small ? "text-[9px]" : "text-xs";
+      const borderClass = locked ? "border-zinc-800 opacity-35" : isStaff ? "border-zinc-700" : "border-orange-500/50";
+      const backgroundClass = isStaff ? "bg-zinc-950" : `bg-gradient-to-br ${rarities[card.rarity] || rarities.Rookie}`;
+      const front = <div className={`absolute inset-0 overflow-hidden rounded-2xl border ${borderClass} ${backgroundClass} ${paddingClass} shadow-xl [backface-visibility:hidden]`}><div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,.25),transparent_35%)]" /><div className="relative flex h-full flex-col"><div className="flex items-start justify-between"><div className={`${ovrClass} font-black text-white`}>{locked ? "?" : card.ovr}</div><div className="rounded-full bg-black/60 px-2 py-1 text-[9px] font-black text-white">#{locked ? "?" : card.number}</div></div><div className={`grid place-items-center rounded-xl bg-black/35 ${ballClass}`}>{locked ? "🔒" : isStaff ? "🧢" : "⚽"}</div><div className="min-h-8 flex-1"><div className={`${nameClass} font-black leading-tight text-white`}>{card.name}</div><div className={`${positionClass} font-bold text-zinc-200`}>{locked ? "Nog niet verzameld" : card.position}</div></div><div className="mt-2 flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-white/80"><span>{locked ? "Niet verzameld" : isStaff ? "Staf" : card.rarity}</span><span>x{amount}</span></div></div></div>;
+      const back = <div className={`absolute inset-0 grid rounded-2xl border border-orange-500/50 bg-zinc-950 ${paddingClass} text-center shadow-xl [backface-visibility:hidden] [transform:rotateY(180deg)]`}><div className="grid h-full place-items-center rounded-xl border border-zinc-800 bg-[radial-gradient(circle_at_50%_20%,rgba(255,107,0,.35),transparent_45%)] px-2"><div><div className={small ? "text-2xl" : "text-5xl"}>⚽</div><div className={small ? "mt-1 text-sm font-black text-orange-500" : "mt-2 text-2xl font-black text-orange-500"}>SCOUTORA</div><div className="mt-1 text-[8px] font-black uppercase tracking-[.2em] text-zinc-500">Discover Collect Rise</div></div></div></div>;
+      if (!flip) return <div className={`relative ${sizeClass}`}>{front}</div>;
+      return <button type="button" onClick={() => setIsFlipped((value) => !value)} className={`relative ${sizeClass} w-full cursor-pointer text-left [perspective:1000px]`}><div className={`relative h-full w-full transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? "[transform:rotateY(180deg)]" : ""}`}>{front}{back}</div></button>;
+    }
+
+    function Nav({ page, setPage, coins, ownedCount, totalCards }) {
+      const items = [["dashboard", LayoutDashboard, "Dashboard"], ["packs", PackageIcon, "Packs"], ["collection", Album, "Collectie"], ["trade", Repeat2, "Ruilen"]];
+      return <div className="sticky top-0 z-20 border-b border-zinc-800 bg-black/80 backdrop-blur-xl"><div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4"><div className="flex flex-col items-start"><button type="button" onClick={() => setPage("home")} className="text-left text-3xl font-black tracking-wider text-orange-500">SCOUTORA</button><div className="mt-2 flex flex-wrap items-center gap-2"><button type="button" onClick={() => setPage("earn")} className="inline-flex items-center gap-2 rounded-xl border border-yellow-500/40 bg-yellow-500/10 px-3 py-1.5 text-sm font-black text-white transition hover:border-yellow-400 hover:bg-yellow-500/15"><CoinsIcon size={14} className="text-yellow-400" /><span className="text-yellow-400">{coins}</span></button><button type="button" onClick={() => setPage("collection")} className="inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm font-black text-white transition hover:border-orange-500 hover:bg-zinc-900"><Album size={14} className="text-orange-500" /><span className="text-orange-500">{ownedCount}/{totalCards}</span></button></div></div><div className="flex flex-wrap gap-2">{items.map(([id, IconComp, label]) => <button key={id} type="button" onClick={() => setPage(id)} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-black transition ${page === id ? "bg-orange-500 text-black" : "border border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-orange-500"}`}><IconComp size={16} /> {label}</button>)}</div></div></div>;
+    }
+
+    function Stat({ icon: IconComp, label, value, coin = false }) {
+      return <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5"><div className="flex items-center gap-2 text-xs font-black uppercase tracking-[.2em] text-zinc-500"><IconComp size={18} />{label}</div><div className={`mt-3 text-3xl font-black ${coin ? "text-yellow-400" : "text-orange-500"}`}>{value}</div></div>;
+    }
+
+    function ScoutoraPreview() {
+      const baseCards = useMemo(() => makeCards(), []);
+      const ownPlayerBase = baseCards.find((card) => card.name === "Jace Melkert") || baseCards[0];
+      const [playerProgress, setPlayerProgress] = useState({ cardId: ownPlayerBase.id, xp: 80, upgrades: 0 });
+      const allCards = useMemo(() => applyPlayerProgress(baseCards, playerProgress), [baseCards, playerProgress]);
+      const validationErrors = useMemo(() => validateCards(allCards), [allCards]);
+      const [page, setPage] = useState("home");
+      const [coins, setCoins] = useState(1250);
+      const [owned, setOwned] = useState(() => Object.fromEntries(allCards.slice(0, 12).map((card) => [card.id, 1])));
+      const [opened, setOpened] = useState([]);
+      const [packReveal, setPackReveal] = useState([]);
+      const [revealIndex, setRevealIndex] = useState(0);
+      const [claimedTeamRewards, setClaimedTeamRewards] = useState({});
+      const [dailyClaims, setDailyClaims] = useState(0);
+      const [streak, setStreak] = useState(0);
+      const [savedStreak, setSavedStreak] = useState(0);
+      const [streakLost, setStreakLost] = useState(false);
+      const ownedCount = Object.keys(owned).length;
+      const duplicates = Object.values(owned).reduce((sum, amount) => sum + Math.max(0, amount - 1), 0);
+      const ownedCards = allCards.filter((card) => owned[card.id]);
+      const ownPlayerCard = allCards.find((card) => card.id === playerProgress.cardId);
+      const xpNeeded = 100 + playerProgress.upgrades * 50;
+      const canUpgradeOwnPlayer = playerProgress.xp >= xpNeeded;
+      const rarityInfo = getRarityProgress(ownPlayerCard, playerProgress);
+
+      function earnOwnPlayerXp(amount) { setPlayerProgress((current) => ({ ...current, xp: current.xp + amount })); }
+      function upgradeOwnPlayerCard() { if (!canUpgradeOwnPlayer) return; setPlayerProgress((current) => ({ ...current, xp: current.xp - xpNeeded, upgrades: current.upgrades + 1 })); }
+      function openPack(pack) { if (coins < pack.price) return; const drawn = Array.from({ length: pack.cards }, () => allCards[Math.floor(Math.random() * allCards.length)]); setCoins((current) => current - pack.price); earnOwnPlayerXp(pack.xp); setPackReveal(drawn); setRevealIndex(0); setOpened([]); }
+      function collectRevealedCard() { const card = packReveal[revealIndex]; if (!card) return; setOwned((current) => ({ ...current, [card.id]: (current[card.id] || 0) + 1 })); setOpened((current) => [...current, card]); if (revealIndex + 1 >= packReveal.length) { setPackReveal([]); setRevealIndex(0); return; } setRevealIndex((current) => current + 1); }
+      function sellOneDuplicate(cardId) { if (!owned[cardId] || owned[cardId] <= 1) return; setOwned((current) => ({ ...current, [cardId]: current[cardId] - 1 })); setCoins((current) => current + 10); }
+      function claimTeamReward(team) { if (claimedTeamRewards[team]) return; setCoins((current) => current + 100); earnOwnPlayerXp(50); setClaimedTeamRewards((current) => ({ ...current, [team]: true })); }
+      function claimDailyReward() { if (dailyClaims >= 10 || streakLost) return; const nextDay = dailyClaims + 1; setDailyClaims(nextDay); setCoins((current) => current + (nextDay === 10 ? 100 : 10)); earnOwnPlayerXp(10); if (nextDay === 10) { setStreak((current) => current + 1); setDailyClaims(0); } }
+      function missDailyReward() { setSavedStreak(streak); setDailyClaims(0); setStreak(0); setStreakLost(true); }
+      function restoreStreak() { if (coins < 300) return; setCoins((current) => current - 300); setStreak(savedStreak); setStreakLost(false); }
+
+      if (page === "home") {
+        return <main className="min-h-screen bg-black text-white"><section className="grid min-h-screen place-items-center overflow-hidden bg-[radial-gradient(circle_at_50%_20%,rgba(255,107,0,.35),transparent_35%)] px-6 text-center"><div className="max-w-4xl"><div className="mb-5 text-8xl">⚽</div><h1 className="text-6xl font-black tracking-[.18em] sm:text-8xl">SCOUTORA</h1><p className="mt-4 text-2xl font-bold text-zinc-300">Discover. <span className="text-orange-500">Collect.</span> Rise.</p><p className="mx-auto mt-5 max-w-2xl text-zinc-400">Een voetbal card collecting app voor amateurspelers. Open packs, verzamel teams, ruil kaarten en groei richting Immortal.</p><div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"><button type="button" onClick={() => setPage("dashboard")} className="w-full rounded-2xl bg-orange-500 px-8 py-4 text-lg font-black text-black shadow-[0_0_50px_-15px_#ff6b00] transition hover:scale-105 sm:w-auto">Inloggen</button><button type="button" onClick={() => setPage("dashboard")} className="w-full rounded-2xl border border-orange-500/60 bg-zinc-950 px-8 py-4 text-lg font-black text-white transition hover:border-orange-500 hover:bg-zinc-900 sm:w-auto">Aanmelden</button></div><button type="button" onClick={() => setPage("dashboard")} className="mt-4 rounded-lg border border-zinc-800 bg-black/60 px-4 py-2 text-xs font-black uppercase tracking-[.15em] text-zinc-500 transition hover:border-orange-500 hover:text-orange-500">Beheer</button></div></section></main>;
+      }
+
+      return <main className="min-h-screen bg-black text-white"><Nav page={page} setPage={setPage} coins={coins} ownedCount={ownedCount} totalCards={allCards.length} />
+        {validationErrors.length > 0 && <div className="mx-auto mt-4 max-w-7xl rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">{validationErrors.slice(0, 3).map((error) => <div key={error}>{error}</div>)}</div>}
+
+        {page === "dashboard" && <section className="mx-auto max-w-7xl px-4 py-8"><div className="rounded-[2rem] border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black p-5 shadow-2xl"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.3em] text-orange-500">Welkom terug, Scout</p><h1 className="mt-2 text-4xl font-black">Jouw clubcollectie groeit</h1><p className="mt-2 max-w-2xl text-sm text-zinc-400">Open packs, bouw teams compleet en ruil dubbelen om sneller richting zeldzame kaarten te gaan.</p></div><Trophy className="text-orange-500" size={64} /></div></div><div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><Stat icon={CoinsIcon} label="Coins" value={coins} coin /><Stat icon={Album} label="Kaarten" value={`${ownedCount}/${allCards.length}`} /><Stat icon={Repeat2} label="Dubbelen" value={duplicates} /><Stat icon={Users} label="Teams" value={teams.length} /></div>{ownPlayerCard && <div className="mt-8 grid gap-5 lg:grid-cols-[240px_1fr] items-start"><div className="mx-auto w-full max-w-[220px]"><Card card={ownPlayerCard} amount={owned[ownPlayerCard.id] || 1} flip /></div><div className="rounded-[2rem] border border-zinc-800 bg-zinc-950 p-6"><div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.25em] text-orange-500">Mijn spelerskaart</p><h2 className="mt-2 text-3xl font-black">{ownPlayerCard.name}</h2><p className="mt-2 text-sm text-zinc-400">Verdien XP met trainingen, wedstrijden en QR-scans. Zodra je upgrade, wordt jouw kaart overal beter zichtbaar waar deze kaart voorkomt.</p></div><div className="rounded-2xl border border-orange-500/40 bg-orange-500/10 px-4 py-3 text-center"><div className="text-xs font-black uppercase tracking-[.2em] text-zinc-400">Level</div><div className="mt-1 text-3xl font-black text-orange-500">{ownPlayerCard.level}</div></div></div><div className="mt-5 rounded-2xl border border-zinc-800 bg-black p-4"><div className="mb-2 flex items-center justify-between text-sm font-black"><span className="flex items-center gap-2 text-zinc-300"><Zap size={16} className="text-yellow-400" /> XP</span><span className="text-yellow-400">{playerProgress.xp}/{xpNeeded}</span></div><div className="h-3 overflow-hidden rounded-full bg-zinc-800"><div className="h-full rounded-full bg-yellow-400" style={{ width: `${Math.min(100, (playerProgress.xp / xpNeeded) * 100)}%` }} /></div></div>{rarityInfo.nextRarity && <div className="mt-5 rounded-2xl border border-zinc-800 bg-black p-4"><div className="text-xs font-black uppercase tracking-[.2em] text-zinc-500">Volgende rarity</div><div className={`mt-2 text-2xl font-black ${rarityInfo.nextRarity.color}`}>{rarityInfo.nextRarity.name}</div><p className="mt-2 text-sm text-zinc-400">Nog <span className="font-black text-yellow-400">{rarityInfo.xpRemainingForNextRarity} XP</span> nodig om {rarityInfo.nextRarity.name} te bereiken.</p></div>}<div className="mt-5 rounded-2xl border border-zinc-800 bg-black p-4"><div className="text-xs font-black uppercase tracking-[.2em] text-zinc-500">Rarity Progressie</div><div className="mt-3 space-y-3">{rarityInfo.rows.map((rarity) => <div key={rarity.name}><div className="mb-1 flex items-center justify-between text-xs font-black"><span className={rarity.color}>{rarity.name}</span><span className="text-zinc-500">{rarity.xpRemaining} XP</span></div><div className="h-2 overflow-hidden rounded-full bg-zinc-800"><div className="h-full rounded-full bg-orange-500" style={{ width: `${Math.max(5, Math.min(100, ((rarity.totalXpNeeded - rarity.xpRemaining) / rarity.totalXpNeeded) * 100))}%` }} /></div></div>)}</div></div><div className="mt-5 flex flex-wrap gap-3"><button type="button" onClick={() => earnOwnPlayerXp(25)} className="rounded-xl border border-yellow-500/50 bg-yellow-500/10 px-5 py-3 font-black text-yellow-400 transition hover:bg-yellow-500/20">+25 XP demo</button><button type="button" onClick={upgradeOwnPlayerCard} disabled={!canUpgradeOwnPlayer} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 font-black text-black transition hover:scale-105 disabled:bg-zinc-700 disabled:text-zinc-400"><Star size={18} /> Upgrade kaart</button></div></div></div>}</section>}
+
+        {page === "earn" && <section className="mx-auto max-w-7xl px-4 py-8"><h1 className="text-5xl font-black">Coins verdienen</h1><p className="mt-2 text-zinc-400">Verdien coins én XP met dagelijkse beloningen, packs en QR-codes.</p><div className="mt-6 grid gap-4 lg:grid-cols-3"><div className="max-w-5xl rounded-[2rem] border border-zinc-800 bg-zinc-950 p-4 lg:col-span-2"><div className="flex flex-wrap items-start justify-between gap-4"><div><CoinsIcon className="mb-2 text-yellow-400" size={30} /><h2 className="text-lg font-black">Dagelijkse beloning</h2><p className="mt-1 text-xs text-zinc-400">Klik elke dag één vakje aan. Dag 1 t/m 9 geeft 10 coins + 10 XP. Dag 10 geeft 100 coins + 10 XP en +1 streak.</p></div><div className={`rounded-2xl border px-3 py-2 text-center ${streak > 0 ? "border-red-500 bg-red-500/15 shadow-[0_0_35px_-10px_#ef4444]" : "border-red-500/40 bg-red-500/10 shadow-[0_0_25px_-15px_#ef4444]"}`}><div className="flex items-center justify-center gap-1 text-xs font-black uppercase tracking-[.2em] text-red-300"><Flame size={14} className="text-red-400" /><span>Streak</span></div><div className="mt-1 text-2xl font-black text-red-400">{streak}x</div></div></div><div className="mt-4 grid grid-cols-5 gap-2 sm:grid-cols-10">{Array.from({ length: 10 }, (_, index) => { const day = index + 1; const claimed = day <= dailyClaims; const isFinal = day === 10; const isNext = day === dailyClaims + 1 && !streakLost; return <button key={day} type="button" onClick={isNext ? claimDailyReward : undefined} disabled={!isNext} className={`rounded-xl border p-2 text-center transition ${claimed ? "border-yellow-400 bg-yellow-400 text-black" : isFinal ? "border-yellow-400/60 bg-yellow-400/10 text-yellow-400" : "border-zinc-800 bg-black text-zinc-400"} ${isNext ? "hover:scale-105" : "opacity-80"}`}><div className="text-[10px] font-black uppercase">Dag {day}</div><div className="mt-1 text-sm font-black">{isFinal ? "+100" : "+10"}</div><div className="text-[9px] font-black text-cyan-400">+10 XP</div></button>; })}</div>{streakLost && <div className="mt-5 rounded-2xl border border-red-500/40 bg-red-500/10 p-4"><div className="font-black text-red-300">Je streak is vervallen.</div><p className="mt-1 text-sm text-zinc-400">Herstel je streak door 300 coins in te zetten. Je komt dan terug op {savedStreak}x.</p><button type="button" onClick={restoreStreak} disabled={coins < 300} className="mt-3 rounded-xl bg-orange-500 px-5 py-2 font-black text-black transition hover:scale-105 disabled:bg-zinc-700 disabled:text-zinc-400">Herstel streak voor 300 coins</button></div>}<button type="button" onClick={missDailyReward} className="mt-4 rounded-xl border border-zinc-800 bg-black px-3 py-2 text-[10px] font-black uppercase tracking-[.15em] text-zinc-500 transition hover:border-red-500 hover:text-red-300">Demo: dag vergeten</button></div><div className="max-w-xs rounded-[2rem] border border-zinc-800 bg-zinc-950 p-3"><QrCode className="mb-2 text-orange-500" size={28} /><h2 className="text-base font-black">QR-code scannen</h2><p className="mt-1 text-xs text-zinc-400">Scan een QR-code bij een training, wedstrijd of clubactie om coins te verdienen.</p><div className="mt-3 grid aspect-square place-items-center rounded-xl border border-dashed border-orange-500/50 bg-black text-center"><div><QrCode className="mx-auto text-orange-500" size={42} /><div className="mt-2 text-xs font-black text-zinc-400">QR scanner</div></div></div><div className="mt-3 grid grid-cols-2 gap-2"><button type="button" onClick={() => { setCoins((current) => current + 25); earnOwnPlayerXp(25); }} className="rounded-lg bg-orange-500 py-2 text-xs font-black text-black transition hover:scale-105">Scan training</button><button type="button" onClick={() => { setCoins((current) => current + 25); earnOwnPlayerXp(25); }} className="rounded-lg border border-orange-500/60 bg-black py-2 text-xs font-black text-white transition hover:bg-zinc-900">Scan wedstrijd</button></div></div></div></section>}
+
+        {page === "packs" && <section className="mx-auto max-w-7xl px-4 py-8"><h1 className="text-5xl font-black">Packs openen</h1><p className="mt-2 text-zinc-400">Je hebt <b className="text-yellow-400">{coins}</b> coins.</p><div className="mt-6 grid gap-5 md:grid-cols-3">{packs.map((pack) => <div key={pack.id} className="rounded-[2rem] border border-zinc-800 bg-zinc-950 p-6"><PackageIcon className="mb-5 text-orange-500" size={54} /><h2 className="text-2xl font-black">{pack.name}</h2><p className="mt-2 text-sm text-zinc-400">{pack.note}</p><p className="mt-1 text-xs font-black text-yellow-400">+{pack.xp} XP</p><div className="mt-5 rounded-2xl border border-zinc-800 bg-black p-4"><div className="flex justify-between font-black"><span>{pack.cards} kaarten</span><span className="text-yellow-400">{pack.price} coins</span></div></div><button type="button" onClick={() => openPack(pack)} disabled={coins < pack.price || packReveal.length > 0} className="mt-5 w-full rounded-xl bg-orange-500 py-3 font-black text-black transition hover:scale-105 disabled:bg-zinc-700 disabled:text-zinc-400">Open pack</button></div>)}</div>{packReveal.length > 0 && <div className="mt-9 rounded-[2rem] border border-orange-500/40 bg-zinc-950 p-6 text-center shadow-[0_0_60px_-25px_#ff6b00]"><p className="text-sm font-black uppercase tracking-[.25em] text-orange-500">Kaart {revealIndex + 1} van {packReveal.length}</p><h2 className="mt-2 text-3xl font-black">Klik op de kaart om toe te voegen</h2><div className="mx-auto mt-6 max-w-[160px]"><button type="button" onClick={collectRevealedCard} className="w-full transition hover:scale-105"><Card card={packReveal[revealIndex]} small /></button></div></div>}{opened.length > 0 && <><h2 className="mt-9 text-3xl font-black">Toegevoegd aan je verzameling</h2><div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12">{opened.map((card, index) => <Card key={`${card.id}-${index}`} card={card} small flip />)}</div></>}</section>}
+
+        {page === "collection" && <section className="mx-auto max-w-7xl px-4 py-8"><h1 className="text-5xl font-black">Mijn collectie</h1><p className="mt-2 text-zinc-400">Gesorteerd per team, zodat je duidelijk ziet welke spelers en staf erbij horen.</p><div className="mt-6 space-y-8">{teams.map((team) => { const teamCards = allCards.filter((card) => card.team === team); const teamOwned = teamCards.filter((card) => owned[card.id]).length; const players = teamCards.filter((card) => card.role !== "Staf"); const staff = teamCards.filter((card) => card.role === "Staf"); const complete = teamOwned === teamCards.length; return <section key={team} className="rounded-[2rem] border border-zinc-800 bg-zinc-950/70 p-4"><div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-zinc-800 pb-4"><div><h2 className={`text-2xl font-black ${complete ? "text-green-400" : "text-orange-500"}`}>{shortTeamName(team)}</h2><p className="mt-1 text-sm font-bold text-zinc-400">{players.length} spelers{staff.length ? ` · ${staff.length} staf` : ""}</p></div><div className="flex items-center gap-2"><div className={`rounded-xl border px-3 py-2 text-sm font-black ${complete ? "border-green-500/40 bg-green-500/10 text-green-400" : "border-zinc-800 bg-black text-orange-500"}`}>{teamOwned}/{teamCards.length}</div>{complete && !claimedTeamRewards[team] && <button type="button" onClick={() => claimTeamReward(team)} className="rounded-xl bg-green-500 px-3 py-2 text-sm font-black text-black transition hover:scale-105">Claim 100 coins + 50 XP</button>}{complete && claimedTeamRewards[team] && <div className="rounded-xl border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm font-black text-green-400">100 coins + 50 XP geclaimd</div>}</div></div><div className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12">{players.map((card) => <Card key={card.id} card={card} amount={owned[card.id] || 0} locked={!owned[card.id]} small flip />)}</div>{staff.length > 0 && <><h3 className="mb-3 mt-5 text-sm font-black uppercase tracking-[.2em] text-zinc-500">Staf</h3><div className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12">{staff.map((card) => <Card key={card.id} card={card} amount={owned[card.id] || 0} locked={!owned[card.id]} small flip />)}</div></>}</section>; })}</div></section>}
+
+        {page === "trade" && <section className="mx-auto max-w-7xl px-4 py-8"><h1 className="text-5xl font-black">Ruilen</h1><p className="mt-2 text-zinc-400">Maak een ruilvoorstel met een andere speler of verkoop losse dubbele kaarten.</p><div className="mt-6 rounded-[2rem] border border-zinc-800 bg-zinc-950 p-6"><h2 className="text-2xl font-black text-orange-500">Nieuw ruilvoorstel</h2><div className="mt-5 grid gap-4 md:grid-cols-3"><div><label className="mb-2 block text-sm font-black text-zinc-400">Jouw dubbele kaart</label><select className="w-full rounded-xl border border-zinc-800 bg-black px-4 py-3 text-white" defaultValue=""><option value="">Kies een dubbele kaart</option>{ownedCards.filter((card) => owned[card.id] > 1).map((card) => <option key={card.id} value={card.id}>{card.name} ({shortTeamName(card.team)})</option>)}</select></div><div><label className="mb-2 block text-sm font-black text-zinc-400">Kaart die je wilt ontvangen</label><select className="w-full rounded-xl border border-zinc-800 bg-black px-4 py-3 text-white" defaultValue=""><option value="">Kies gewenste kaart</option>{allCards.map((card) => <option key={card.id} value={card.id}>{card.name} ({shortTeamName(card.team)})</option>)}</select></div><div><label className="mb-2 block text-sm font-black text-zinc-400">Ruilen met speler</label><select className="w-full rounded-xl border border-zinc-800 bg-black px-4 py-3 text-white" defaultValue=""><option value="">Kies account</option><option>Benjamin Blom</option><option>Kai Boelens</option><option>Mirko Ćutunić</option><option>Konstantijn Savchuk</option></select></div></div><button type="button" className="mt-5 rounded-xl bg-orange-500 px-6 py-3 font-black text-black transition hover:scale-105">Verstuur ruilvoorstel</button><p className="mt-3 text-sm text-zinc-500">De ruil wordt pas uitgevoerd wanneer beide spelers exact dezelfde ruil bevestigen.</p></div><div className="mt-8 rounded-[2rem] border border-zinc-800 bg-zinc-950 p-6"><div className="text-sm font-black uppercase tracking-[.25em] text-orange-500">Dubbelen</div><div className="mt-2 text-5xl font-black">{duplicates}</div><p className="mt-2 text-zinc-400">Verkoop dubbele kaarten één voor één voor 10 coins.</p></div><div className="mt-6 grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12">{ownedCards.filter((card) => owned[card.id] > 1).slice(0, 24).map((card) => <div key={card.id}><Card card={card} amount={owned[card.id]} small flip /><button type="button" onClick={() => sellOneDuplicate(card.id)} className="mt-2 w-full rounded-lg bg-orange-500 py-1.5 text-xs font-black text-black transition hover:scale-105">Verkoop voor 10</button></div>)}</div></section>}
+      </main>;
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<ScoutoraPreview />);
+  </script>
+</body>
+</html>
